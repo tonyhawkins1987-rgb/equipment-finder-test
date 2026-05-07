@@ -915,6 +915,21 @@
             <div class="suggestions-list" id="suggestions-list">
                 <!-- Suggestions populated by Firebase listener -->
             </div>
+            <div class="weekly-sync-section">
+                <h3>📦 Weekly Sync</h3>
+                <div class="sync-counts">
+                    <div class="sync-count-chip"><span id="sync-count-location">0</span>Location Changes</div>
+                    <div class="sync-count-chip"><span id="sync-count-name">0</span>Name Corrections</div>
+                    <div class="sync-count-chip"><span id="sync-count-deleted">0</span>Deletions</div>
+                    <div class="sync-count-chip"><span id="sync-count-total">0</span>Total Overrides</div>
+                </div>
+                <div class="sync-actions">
+                    <button type="button" class="sync-btn" id="sync-download-btn">⬇ Download Updated HTML</button>
+                    <button type="button" class="sync-btn" id="sync-summary-btn">📋 View Change Summary</button>
+                    <button type="button" class="sync-btn danger" id="sync-clear-btn">🗑 Clear Overrides</button>
+                </div>
+                <div class="sync-last-cleared" id="sync-last-cleared"></div>
+            </div>
         </div>
     </div>
 
