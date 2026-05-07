@@ -3378,7 +3378,7 @@
             suggestLocationError.textContent = "";
             suggestModalError.textContent = "";
             suggestModalSuccess.textContent = "";
-            suggestionOverlay.style.display = "flex";
+            alert('suggestionOverlay='+(suggestionOverlay?'FOUND':'NULL')); if(suggestionOverlay)suggestionOverlay.style.display='flex';
             suggestItemInput.focus();
         }
 
