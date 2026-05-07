@@ -3358,17 +3358,67 @@
             });
             if (btnSum) btnSum.addEventListener("click", function() {
                 db.collection("locationOverrides").get().then(function(snap) {
-                    var docs = []; snap.forEach(function(doc) { var d = doc.data(); if (!d._meta) docs.push(d); });
+                    var docs = [];
+                    snap.forEach(function(doc) { var d = doc.data(); if (!d._meta) docs.push({ id: doc.id, data: d }); });
                     if (!docs.length) { alert("No pending overrides found."); return; }
-                    var lines = ["=== Pending Overrides ===\n"];
-                    docs.forEach(function(d) {
+                    var existing = document.getElementById("sync-summary-modal");
+                    if (existing) existing.remove();
+                    var overlay = document.createElement("div");
+                    overlay.id = "sync-summary-modal";
+                    overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;";
+                    var box = document.createElement("div");
+                    box.style.cssText = "background:#fff;border-radius:14px;padding:28px 24px;max-width:620px;width:95%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.22);";
+                    var title = document.createElement("h3");
+                    title.textContent = "\uD83D\uDCCB Pending Overrides (" + docs.length + ")";
+                    title.style.cssText = "margin:0 0 16px;font-size:18px;color:#2c3e50;";
+                    box.appendChild(title);
+                    docs.forEach(function(item) {
+                        var d = item.data;
+                        var docId = item.id;
+                        var row = document.createElement("div");
+                        row.style.cssText = "display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:8px;margin-bottom:8px;background:#f8f9fa;border:1px solid #e0e0e0;";
                         var when = d.approvedAt && d.approvedAt.toDate ? d.approvedAt.toDate().toLocaleString() : "unknown date";
-                        if (d.deleted) lines.push("❌ DELETED: " + d.itemName + "\n   By: " + (d.approvedBy||"?") + "  At: " + when);
-                        else if (d.newLocation && d.correctedName) lines.push("✏️ RENAMED+MOVED: " + d.itemName + " → " + d.correctedName + " @ " + d.newLocation + "\n   By: " + (d.approvedBy||"?") + "  At: " + when);
-                        else if (d.newLocation) lines.push("📍 MOVED: " + d.itemName + " → " + d.newLocation + "\n   By: " + (d.approvedBy||"?") + "  At: " + when);
-                        else if (d.correctedName) lines.push("✏️ RENAMED: " + d.itemName + " → " + d.correctedName + "\n   By: " + (d.approvedBy||"?") + "  At: " + when);
+                        var label = "";
+                        if (d.deleted) label = "\u274C DELETED: " + d.itemName;
+                        else if (d.newLocation && d.correctedName) label = "\u270F\uFE0F RENAMED+MOVED: " + d.itemName + " \u2192 " + d.correctedName + " @ " + d.newLocation;
+                        else if (d.newLocation) label = "\uD83D\uDCCD MOVED: " + d.itemName + " \u2192 " + d.newLocation;
+                        else if (d.correctedName) label = "\u270F\uFE0F RENAMED: " + d.itemName + " \u2192 " + d.correctedName;
+                        else label = d.itemName || "(unknown)";
+                        var info = document.createElement("div");
+                        info.style.cssText = "flex:1;min-width:0;";
+                        var labelEl = document.createElement("div");
+                        labelEl.style.cssText = "font-weight:600;font-size:13px;color:#2c3e50;word-break:break-word;";
+                        labelEl.textContent = label;
+                        var metaEl = document.createElement("div");
+                        metaEl.style.cssText = "font-size:11px;color:#7f8c8d;margin-top:3px;";
+                        metaEl.textContent = "By: " + (d.approvedBy || "?") + "  \u00B7  " + when;
+                        info.appendChild(labelEl);
+                        info.appendChild(metaEl);
+                        var rollBtn = document.createElement("button");
+                        rollBtn.textContent = "\u21A9 Rollback";
+                        rollBtn.style.cssText = "flex-shrink:0;padding:5px 12px;border:none;border-radius:6px;background:#e74c3c;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;";
+                        rollBtn.addEventListener("click", function() {
+                            if (!confirm("Roll back this override for \"" + (d.itemName || "") + "\"? This will delete the override from Firestore.")) return;
+                            db.collection("locationOverrides").doc(docId).delete().then(function() {
+                                row.remove();
+                                var remaining = box.querySelectorAll("[data-override-row]").length;
+                                if (remaining === 0) { overlay.remove(); alert("All overrides rolled back."); }
+                                if (typeof performSearch === "function") performSearch();
+                            }).catch(function(err) { alert("Rollback failed: " + err.message); });
+                        });
+                        row.setAttribute("data-override-row", docId);
+                        row.appendChild(info);
+                        row.appendChild(rollBtn);
+                        box.appendChild(row);
                     });
-                    alert(lines.join("\n\n"));
+                    var closeBtn = document.createElement("button");
+                    closeBtn.textContent = "Close";
+                    closeBtn.style.cssText = "margin-top:16px;padding:8px 22px;border:none;border-radius:8px;background:#667eea;color:#fff;font-size:14px;font-weight:600;cursor:pointer;";
+                    closeBtn.addEventListener("click", function() { overlay.remove(); });
+                    overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
+                    box.appendChild(closeBtn);
+                    overlay.appendChild(box);
+                    document.body.appendChild(overlay);
                 }).catch(function(err) { alert("Error: " + err.message); });
             });
             if (btnClr) btnClr.addEventListener("click", function() {
