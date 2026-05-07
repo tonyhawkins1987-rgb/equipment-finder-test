@@ -3203,7 +3203,7 @@
             appId: "1:432714172596:web:9c311e4bc43301382a6fe1"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        window.onerror=function(msg,src,line){document.body.innerHTML+='<div style="position:fixed;top:0;left:0;background:red;color:white;font-size:14px;padding:8px;z-index:99999;max-width:100%">JS ERROR: '+msg+' (line '+line+')</div>';return true;}; firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
