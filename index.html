@@ -787,7 +787,7 @@
 
         <!-- New suggestion/report button -->
         <div class="suggestion-bar">
-            <button type="button" class="suggestion-btn" id="open-suggestion-btn" onclick="var o=document.getElementById('suggestion-modal-overlay');if(o){o.style.display='flex';}else{alert('overlay not found');}">
+            <button type="button" class="suggestion-btn" id="open-suggestion-btn">
                 Report missing/wrong item location
             </button>
         </div>
@@ -3390,7 +3390,7 @@
         }
 
         function closeSuggestionModal() {
-            suggestionOverlay.style.display = "none";
+            if (suggestionOverlay) suggestionOverlay.style.display = "none";
         }
 
         if (openSuggestionBtn) openSuggestionBtn.addEventListener("click", openSuggestionModal);
@@ -3399,7 +3399,7 @@
             closeSuggestionModal
         );
 
-        suggestionif (overlay) overlay.addEventListener("click", function (e) {
+        if (suggestionOverlay) suggestionOverlay.addEventListener("click", function (e) {
             if (e.target === suggestionOverlay) {
                 closeSuggestionModal();
             }
