@@ -938,24 +938,23 @@
         <div class="modal">
             <h2>Report incorrect location or add a new item</h2>
             <p>Please use the same naming style you see in search results when suggesting an item.</p>
-
             <label for="suggest-item">Item to be added/amended</label>
-            <textarea
-                id="suggest-item"
-                placeholder="e.g. ABT Bellovac Drain, Accolade Hip Stem Inserter Stryker, etc."
-            ></textarea>
+            <input type="text" id="suggest-item" autocomplete="off"
+                placeholder="e.g. ABT Bellovac Drain, Accolade Hip Stem Inserter Stryker, etc." />
+            <div id="suggest-item-dropdown"></div>
             <div class="suggestion-error" id="suggest-item-error"></div>
-
+            <div id="suggest-corrected-name-row">
+                <label for="suggest-corrected-name">Suggested corrected name (optional)</label>
+                <input type="text" id="suggest-corrected-name" autocomplete="off"
+                    placeholder="Leave blank if the name is correct" />
+            </div>
             <label for="suggest-location" style="margin-top: 10px;">Correct location of item</label>
-            <textarea
-                id="suggest-location"
+            <textarea id="suggest-location"
                 placeholder="e.g. 36 shelf C, 43 shelf A misc. box, CSSD, K-mart, etc."
             ></textarea>
             <div class="suggestion-error" id="suggest-location-error"></div>
-
             <div class="modal-error" id="suggest-modal-error"></div>
             <div class="modal-success" id="suggest-modal-success"></div>
-
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" id="suggest-cancel-btn">Cancel</button>
                 <button type="button" class="btn-primary" id="suggest-submit-btn">Submit</button>
