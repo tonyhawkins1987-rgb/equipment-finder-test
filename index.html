@@ -963,7 +963,7 @@
 
     <script>
         // --------------------------------------------
-        alert('SCRIPT START'); // Core data and search logic
+        document.title = 'JS-v14'; // // Core data and search logic
         // --------------------------------------------
 
         // IMPORTANT:
@@ -3378,7 +3378,7 @@
             "suggestion-status-text"
         );
 
-        function openSuggestionModal() { alert('modal open called');
+        function openSuggestionModal() { document.title='MODAL-CALLED';
             if (suggestItemInput) suggestItemInput.value = "";
             if (suggestLocationInput) suggestLocationInput.value = "";
             if (suggestItemError) suggestItemError.textContent = "";
