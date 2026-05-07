@@ -164,6 +164,7 @@
             margin-bottom: 12px;
             transition: all 0.2s;
             background: #fafafa;
+                        position: relative;
         }
 
         .result-item:hover {
@@ -193,6 +194,27 @@
         .no-results {
             text-align: center;
             padding: 40px;
+            
+        .suggest-edit-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: 1px solid #c0c8f0;
+            border-radius: 6px;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 3px 7px;
+            opacity: 0.6;
+            transition: opacity 0.2s, background 0.2s;
+            line-height: 1;
+        }
+        .suggest-edit-btn:hover {
+            opacity: 1;
+            background: #eef0ff;
+        }
             color: #7f8c8d;
             font-size: 16px;
         }
@@ -3111,7 +3133,7 @@
                 var adminBtns = isAdmin
                     ? '<div class="admin-card-actions"><button class="admin-card-btn btn-delete" data-card-action="delete" data-item="' + escapeHtml(item[0]) + '" data-loc="' + escapeHtml(item[1]) + '">🗑 Delete</button><button class="admin-card-btn" data-card-action="edit-location" data-item="' + escapeHtml(item[0]) + '" data-loc="' + escapeHtml(item[1]) + '">📍 Edit Location</button><button class="admin-card-btn btn-rename" data-card-action="rename" data-item="' + escapeHtml(item[0]) + '" data-loc="' + escapeHtml(item[1]) + '">✏️ Rename Item</button></div>'
                     : "";
-                html += '<div class="result-item"><div class="result-name">' + highlightMatch(item[0], searchTerm) + '</div><div class="result-location">' + highlightMatch(item[1], searchTerm) + "</div>" + ovHtml + adminBtns + "</div>";
+                html += '<div class="result-item"><div class="result-name">' + highlightMatch(item[0], searchTerm) + '</div><div class="result-location">' + highlightMatch(item[1], searchTerm) + "</div>" + ovHtml + adminBtn + '<button class="suggest-edit-btn" data-item=\'' + escapeHtml(item[0]) + '\' data-loc=\'' + escapeHtml(item[1]) + '\' title="Suggest an edit">&#9998;</button>'s + "</div>";
             });
             if (window._overflowDocs) {
                 var mainNames = data.map(function(d){ return (d[0]||"").toLowerCase(); });
@@ -3129,6 +3151,21 @@
                 html += '<div class="no-results" style="color:#667eea;">Showing first 100 of ' + matches.length + " results. Refine your search for more specific results.</div>";
             }
             resultsDiv.innerHTML = html;
+                    resultsDiv.querySelectorAll(".suggest-edit-btn").forEach(function(btn) {
+          btn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            var itemName = btn.getAttribute("data-item") || "";
+            var itemLoc = btn.getAttribute("data-loc") || "";
+            var siEl = document.getElementById("suggest-item");
+            var slEl = document.getElementById("suggest-location");
+            var overlay = document.getElementById("suggestion-modal-overlay");
+            if (!overlay) { alert("Suggestion form not found."); return; }
+            if (siEl) siEl.value = itemName;
+            if (slEl) slEl.value = itemLoc;
+            overlay.style.display = "flex";
+            if (siEl) siEl.focus();
+          });
+        });
         }
         function performSearch() {
             const term = input.value.trim();
