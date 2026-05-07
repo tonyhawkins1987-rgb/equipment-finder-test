@@ -3217,19 +3217,23 @@
         // locationOverrides listener
         // ----------------------------------------
         window._locationOverrides = {};
+    if (db) {
         db.collection("locationOverrides").onSnapshot(function(snap) {
           snap.forEach(function(doc) {
             window._locationOverrides[doc.id] = doc.data().location || "";
           });
         });
+    }
 
         // ----------------------------------------
         // Overflow / temp stock listener
         // ----------------------------------------
         window._overflowDocs = [];
+    if (db) {
         db.collection("overflowStock").orderBy("updatedAt", "desc").onSnapshot(function(snap) {
           window._overflowDocs = snap.docs;
         });
+    }
 
         // ----------------------------------------
         // Autocomplete wiring for suggest-item input
@@ -3859,6 +3863,7 @@ if (action === 'delete') {
         });
 
         // Auth state listener
+    if (auth) {
         auth.onAuthStateChanged(function (user) {
             setAdminUI(user || null);
             if (user) {
@@ -3867,6 +3872,7 @@ if (action === 'delete') {
                 unsubscribeFromSuggestions();
             }
         });
+    }
             // -----------------------------------------------
         // Edit Suggestion Modal logic
         // -----------------------------------------------
