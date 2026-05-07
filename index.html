@@ -3393,13 +3393,13 @@
             suggestionOverlay.style.display = "none";
         }
 
-        openSuggestionBtn.addEventListener("click", openSuggestionModal);
+        if (openSuggestionBtn) openSuggestionBtn.addEventListener("click", openSuggestionModal);
         suggestCancelBtn.addEventListener(
             "click",
             closeSuggestionModal
         );
 
-        suggestionOverlay.addEventListener("click", function (e) {
+        suggestionif (overlay) overlay.addEventListener("click", function (e) {
             if (e.target === suggestionOverlay) {
                 closeSuggestionModal();
             }
@@ -3508,7 +3508,7 @@
             adminLoginOverlay.style.display = "none";
         }
 
-        adminLoginOverlay.addEventListener("click", function (e) {
+        adminLoginif (overlay) overlay.addEventListener("click", function (e) {
             if (e.target === adminLoginOverlay) {
                 closeAdminLoginModal();
             }
@@ -4081,7 +4081,7 @@ if (action === 'delete') {
             startGlobalListener();
 
             // ── Open / close panel ────────────────────────────────
-            openBtn.addEventListener("click", function () {
+            if (openBtn) openBtn.addEventListener("click", function () {
                 clearForm();
                 overlay.style.display = "flex";
                 // Render with whatever docs we already have
@@ -4092,8 +4092,8 @@ if (action === 'delete') {
                 overlay.style.display = "none";
                 clearForm();
             }
-            closeBtn.addEventListener("click", closePanel);
-            overlay.addEventListener("click", function (e) {
+            if (closeBtn) closeBtn.addEventListener("click", closePanel);
+            if (overlay) overlay.addEventListener("click", function (e) {
                 if (e.target === overlay) closePanel();
             });
             cancelEditBtn.addEventListener("click", function () {
