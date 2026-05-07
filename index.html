@@ -3332,30 +3332,38 @@
                 if (elDel) elDel.textContent = delCount;
                 if (elTotal) elTotal.textContent = locCount + nameCount + delCount;
             });
-            if (btnDl) btnDl.addEventListener("click", function() {
-                fetch("https://raw.githubusercontent.com/tonyhawkins1987-rgb/equipment-finder/refs/heads/main/index.html").then(function(r) { return r.text(); }).then(function(html) {
-                    return db.collection("locationOverrides").get().then(function(snap) {
-                        var ovMap = {};
-                        snap.forEach(function(doc) { var d = doc.data(); if (d.itemName && !d._meta) ovMap[d.itemName] = d; });
-                        var dataStart = html.indexOf("var data = [");
-                        var dataEnd = html.indexOf("];", dataStart) + 2;
-                        if (dataStart < 0) { alert("Could not locate var data array in source HTML."); return; }
-                        var rawBlock = html.slice(dataStart, dataEnd);
-        var pairRe = /\["((?:[^"\\]|\\.)*)"\\s*,\\s*"((?:[^"\\]|\\.]*)*)"\\]/g;
-                        var newPairs = []; var m;
-                        while ((m = pairRe.exec(rawBlock)) !== null) {
-                            var name = m[1], loc = m[2];
-                            var ov = ovMap[name];
-                            if (ov) { if (ov.deleted) continue; if (ov.correctedName) name = ov.correctedName; if (ov.newLocation) loc = ov.newLocation; }
-                            newPairs.push('["' + name.replace(/"/g, '\\"') + '","' + loc.replace(/"/g, '\\"') + '"]');
-                        }
-                        var newDataBlock = "var data = [\n" + newPairs.join(",\n") + "\n];";
-                        var updatedHtml = html.slice(0, dataStart) + newDataBlock + html.slice(dataEnd);
-                        var blob = new Blob([updatedHtml], { type: "text/html" });
-                        var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "index-updated-" + new Date().toISOString().slice(0,10) + ".html"; a.click();
-                    });
-                }).catch(function(err) { alert("Download failed: " + err.message); });
+if (btnDl) btnDl.addEventListener("click", function() {
+          db.collection("locationOverrides").get().then(function(snap) {
+            var overrides = {};
+            snap.forEach(function(doc) {
+              var d = doc.data();
+              if (!d._meta) overrides[doc.id] = d;
             });
+            var newPairs = [];
+            for (var i = 0; i < data.length; i++) {
+              var name = data[i][0], loc = data[i][1];
+              var key = name.toLowerCase();
+              var ov = overrides[key];
+              if (ov) {
+                if (ov.deleted) continue;
+                if (ov.correctedName) name = ov.correctedName;
+                if (ov.newLocation) loc = ov.newLocation;
+              }
+              newPairs.push('["' + name.replace(/"/g, '\\"') + '","' + loc.replace(/"/g, '\\"') + '"]');
+            }
+            var newDataBlock = "var data = [\n" + newPairs.join(",\n") + "\n];";
+            var src = document.documentElement.outerHTML;
+            var ds = src.indexOf("var data = [");
+            var de = src.indexOf("];", ds) + 2;
+            if (ds < 0) { alert("Could not locate var data array in page HTML."); return; }
+            var updatedHtml = src.slice(0, ds) + newDataBlock + src.slice(de);
+            var blob = new Blob([updatedHtml], { type: "text/html" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "index-updated-" + new Date().toISOString().slice(0, 10) + ".html";
+            a.click();
+          }).catch(function(err) { alert("Download failed: " + err.message); });
+        });
             if (btnSum) btnSum.addEventListener("click", function() {
                 db.collection("locationOverrides").get().then(function(snap) {
                     var docs = [];
