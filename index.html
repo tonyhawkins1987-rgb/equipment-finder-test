@@ -787,7 +787,7 @@
 
         <!-- New suggestion/report button -->
         <div class="suggestion-bar">
-            <button type="button" class="suggestion-btn" id="open-suggestion-btn">
+            <button type="button" class="suggestion-btn" id="open-suggestion-btn" onclick="var o=document.getElementById('suggestion-modal-overlay');if(o){o.style.display='flex';}else{alert('overlay not found');}">
                 Report missing/wrong item location
             </button>
         </div>
