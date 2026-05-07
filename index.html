@@ -3381,10 +3381,10 @@
         function openSuggestionModal() {
             if (suggestItemInput) suggestItemInput.value = "";
             if (suggestLocationInput) suggestLocationInput.value = "";
-            suggestItemError.textContent = "";
-            suggestLocationError.textContent = "";
-            suggestModalError.textContent = "";
-            suggestModalSuccess.textContent = "";
+            if (suggestItemError) suggestItemError.textContent = "";
+            if (suggestLocationError) suggestLocationError.textContent = "";
+            if (suggestModalError) suggestModalError.textContent = "";
+            if (suggestModalSuccess) suggestModalSuccess.textContent = "";
                         if (suggestionOverlay) suggestionOverlay.style.display = 'flex';
             if (suggestItemInput) suggestItemInput.focus();
         }
@@ -3409,19 +3409,19 @@
             const itemText = suggestItemInput.value.trim();
             const correctLocation = suggestLocationInput.value.trim();
 
-            suggestItemError.textContent = "";
-            suggestLocationError.textContent = "";
-            suggestModalError.textContent = "";
-            suggestModalSuccess.textContent = "";
+            if (suggestItemError) suggestItemError.textContent = "";
+            if (suggestLocationError) suggestLocationError.textContent = "";
+            if (suggestModalError) suggestModalError.textContent = "";
+            if (suggestModalSuccess) suggestModalSuccess.textContent = "";
 
             let hasError = false;
             if (!itemText) {
-                suggestItemError.textContent =
+                if (suggestItemError) suggestItemError.textContent =
                     "Please enter the item name.";
                 hasError = true;
             }
             if (!correctLocation) {
-                suggestLocationError.textContent =
+                if (suggestLocationError) suggestLocationError.textContent =
                     "Please enter the correct location.";
                 hasError = true;
             }
@@ -3449,7 +3449,7 @@
                     }, 5000);
                 })
                 .catch(function (error) {
-                    suggestModalError.textContent =
+                    if (suggestModalError) suggestModalError.textContent =
                         "Error submitting suggestion. Please try again.";
                     console.error(
                         "Suggestion submit error:",
