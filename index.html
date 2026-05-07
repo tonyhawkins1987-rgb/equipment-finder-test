@@ -787,7 +787,7 @@
 
         <!-- New suggestion/report button -->
         <div class="suggestion-bar">
-            <button type="button" class="suggestion-btn" id="open-suggestion-btn">
+            <button type="button" class="suggestion-btn" id="open-suggestion-btn" onclick="openSuggestionModal()">
                 Report missing/wrong item location
             </button>
         </div>
@@ -3388,6 +3388,7 @@
                         if (suggestionOverlay) suggestionOverlay.style.display = 'flex';
             if (suggestItemInput) suggestItemInput.focus();
         }
+                function openOverflowPanel() { var ov = document.getElementById('overflow-overlay'); if (ov) { ov.style.display = 'flex'; } }
 
         function closeSuggestionModal() {
             if (suggestionOverlay) suggestionOverlay.style.display = "none";
