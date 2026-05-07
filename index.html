@@ -3379,14 +3379,14 @@
         );
 
         function openSuggestionModal() {
-            suggestItemInput.value = "";
-            suggestLocationInput.value = "";
+            if (suggestItemInput) suggestItemInput.value = "";
+            if (suggestLocationInput) suggestLocationInput.value = "";
             suggestItemError.textContent = "";
             suggestLocationError.textContent = "";
             suggestModalError.textContent = "";
             suggestModalSuccess.textContent = "";
                         if (suggestionOverlay) suggestionOverlay.style.display = 'flex';
-            suggestItemInput.focus();
+            if (suggestItemInput) suggestItemInput.focus();
         }
 
         function closeSuggestionModal() {
@@ -3394,7 +3394,7 @@
         }
 
         if (openSuggestionBtn) openSuggestionBtn.addEventListener("click", openSuggestionModal);
-        suggestCancelBtn.addEventListener(
+        if (suggestCancelBtn) suggestCancelBtn.addEventListener(
             "click",
             closeSuggestionModal
         );
@@ -3405,7 +3405,7 @@
             }
         });
 
-        suggestSubmitBtn.addEventListener("click", function () {
+        if (suggestSubmitBtn) suggestSubmitBtn.addEventListener("click", function () {
             const itemText = suggestItemInput.value.trim();
             const correctLocation = suggestLocationInput.value.trim();
 
@@ -3439,8 +3439,8 @@
                     reviewedBy: null
                 })
                 .then(function () {
-                    suggestItemInput.value = "";
-                    suggestLocationInput.value = "";
+                    if (suggestItemInput) suggestItemInput.value = "";
+                    if (suggestLocationInput) suggestLocationInput.value = "";
                     closeSuggestionModal();
                     suggestionStatusText.textContent =
                         "Thank you. Your suggestion has been submitted for review.";
