@@ -3341,7 +3341,7 @@
                         var dataEnd = html.indexOf("];", dataStart) + 2;
                         if (dataStart < 0) { alert("Could not locate var data array in source HTML."); return; }
                         var rawBlock = html.slice(dataStart, dataEnd);
-                        var pairRe = /\["([^"\\]*(?:\\.[^"\\]*)*)","([^"\\]*(?:\\.[^"\\]*)*)"/g;
+        var pairRe = /\["((?:[^"\\]|\\.)*)"\\s*,\\s*"((?:[^"\\]|\\.]*)*)"\\]/g;
                         var newPairs = []; var m;
                         while ((m = pairRe.exec(rawBlock)) !== null) {
                             var name = m[1], loc = m[2];
