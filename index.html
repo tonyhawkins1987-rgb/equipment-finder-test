@@ -3060,87 +3060,74 @@
         }
 
         function displayResults(matches, searchTerm) {
+            var overrides = window._locationOverrides || {};
+            matches = matches.filter(function(item) {
+                var key = (item[0] || "").toLowerCase();
+                return !(overrides[key] && overrides[key].deleted);
+            }).map(function(item) {
+                var key = (item[0] || "").toLowerCase();
+                if (overrides[key]) {
+                    var ov = overrides[key];
+                    return [ov.correctedName || item[0], ov.newLocation || item[1]];
+                }
+                return item;
+            });
             if (!matches || matches.length === 0) {
-                resultsDiv.innerHTML =
-                    '<div class="no-results">No equipment found matching ' +
-                    escapeHtml(searchTerm || "") + ".</div>";
+                resultsDiv.innerHTML = '<div class="no-results">No equipment found matching ' + escapeHtml(searchTerm || "") + ".</div>";
                 resultsCount.style.display = "none";
                 return;
             }
-
-            const searchLower = (searchTerm || "").toLowerCase();
+            var searchLower = (searchTerm || "").toLowerCase();
             matches.sort(function (a, b) {
-                const aName = (a[0] || "").toLowerCase();
-                const bName = (b[0] || "").toLowerCase();
-                const aStarts = searchLower && aName.startsWith(searchLower);
-                const bStarts = searchLower && bName.startsWith(searchLower);
+                var aName = (a[0] || "").toLowerCase();
+                var bName = (b[0] || "").toLowerCase();
+                var aStarts = searchLower && aName.startsWith(searchLower);
+                var bStarts = searchLower && bName.startsWith(searchLower);
                 if (aStarts && !bStarts) return -1;
                 if (!aStarts && bStarts) return 1;
                 return aName.localeCompare(bName);
             });
-
             resultsCount.textContent = "Found " + matches.length + " item" + (matches.length === 1 ? "" : "s");
             resultsCount.style.display = "block";
-
-            let html = "";
-            const displayMatches = matches.slice(0, 100);
+            var html = "";
+            var displayMatches = matches.slice(0, 100);
+            var isAdmin = !!(typeof auth !== "undefined" && auth && auth.currentUser);
             displayMatches.forEach(function (item) {
-                const itemNameLower = (item[0] || "").toLowerCase();
-                // Find matching overflow entries (case-insensitive partial match)
-                const ovMatches = window._overflowDocs ? window._overflowDocs.filter(function (doc) {
-                    return (doc.data().item || "").toLowerCase().includes(itemNameLower) ||
-                           itemNameLower.includes((doc.data().item || "").toLowerCase());
+                var itemNameLower = (item[0] || "").toLowerCase();
+                var ovMatches = window._overflowDocs ? window._overflowDocs.filter(function (doc) {
+                    return (doc.data().item || "").toLowerCase().includes(itemNameLower) || itemNameLower.includes((doc.data().item || "").toLowerCase());
                 }) : [];
-
-                let ovHtml = "";
+                var ovHtml = "";
                 if (ovMatches.length > 0) {
-                    ovHtml = '<div class="overflow-result-badge">' +
-                        '<div class="overflow-result-badge-header">📦 Overflow / Temp Stock</div>';
+                    ovHtml = '<div class="overflow-result-badge"><div class="overflow-result-badge-header">📦 Overflow / Temp Stock</div>';
                     ovMatches.slice(0, 3).forEach(function (doc) {
                         var d = doc.data();
                         var ts = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : null;
                         var dateStr = ts ? padTwo(ts.getDate()) + "/" + padTwo(ts.getMonth()+1) + "/" + ts.getFullYear() : "Unknown date";
-                        ovHtml += '<div class="overflow-result-entry">📍 ' + escapeHtml(d.loc || "") +
-                            (d.qty ? " &nbsp;|&nbsp; Qty: " + escapeHtml(d.qty) : "") +
-                            " &nbsp;|&nbsp; " + escapeHtml(d.by || "") +
-                            " &nbsp;|&nbsp; " + dateStr + "</div>";
+                        ovHtml += '<div class="overflow-result-entry">📍 ' + escapeHtml(d.loc || "") + (d.qty ? " &nbsp;|&nbsp; Qty: " + escapeHtml(d.qty) : "") + " &nbsp;|&nbsp; " + escapeHtml(d.by || "") + " &nbsp;|&nbsp; " + dateStr + "</div>";
                     });
                     ovHtml += "</div>";
                 }
-
-                html += '<div class="result-item">' +
-                    '<div class="result-name">' + highlightMatch(item[0], searchTerm) + "</div>" +
-                    '<div class="result-location">' + highlightMatch(item[1], searchTerm) + "</div>" +
-                    ovHtml +
-                    "</div>";
+                var adminBtns = isAdmin
+                    ? '<div class="admin-card-actions"><button class="admin-card-btn btn-delete" data-card-action="delete" data-item="' + escapeHtml(item[0]) + '" data-loc="' + escapeHtml(item[1]) + '">🗑 Delete</button><button class="admin-card-btn" data-card-action="edit-location" data-item="' + escapeHtml(item[0]) + '" data-loc="' + escapeHtml(item[1]) + '">📍 Edit Location</button><button class="admin-card-btn btn-rename" data-card-action="rename" data-item="' + escapeHtml(item[0]) + '" data-loc="' + escapeHtml(item[1]) + '">✏️ Rename Item</button></div>'
+                    : "";
+                html += '<div class="result-item"><div class="result-name">' + highlightMatch(item[0], searchTerm) + '</div><div class="result-location">' + highlightMatch(item[1], searchTerm) + "</div>" + ovHtml + adminBtns + "</div>";
             });
-
-            // Also show custom overflow-only items (not in main data) that match the search
             if (window._overflowDocs) {
-                const mainNames = data.map(function(d){ return (d[0]||"").toLowerCase(); });
+                var mainNames = data.map(function(d){ return (d[0]||"").toLowerCase(); });
                 window._overflowDocs.forEach(function (doc) {
                     var d = doc.data();
                     var ovName = (d.item || "").toLowerCase();
-                    // Only show if it matches the search AND is not already in the main database
                     if (ovName.includes(searchLower) && !mainNames.some(function(n){ return n === ovName; })) {
                         var ts = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : null;
                         var dateStr = ts ? padTwo(ts.getDate()) + "/" + padTwo(ts.getMonth()+1) + "/" + ts.getFullYear() : "";
-                        html += '<div class="result-item-overflow-only">' +
-                            '<div class="result-name">📦 ' + escapeHtml(d.item || "") + ' <span style="font-size:11px;font-weight:400;color:#e65100;">(overflow/temp stock only)</span></div>' +
-                            '<div class="result-location">' + escapeHtml(d.loc || "") + '</div>' +
-                            '<div style="font-size:12px;color:#7f8c8d;margin-top:4px;">' +
-                            (d.qty ? "Qty: " + escapeHtml(d.qty) + " &nbsp;|&nbsp; " : "") +
-                            escapeHtml(d.by || "") + " &nbsp;|&nbsp; " + dateStr +
-                            "</div></div>";
+                        html += '<div class="result-item-overflow-only"><div class="result-name">📦 ' + escapeHtml(d.item || "") + ' <span style="font-size:11px;font-weight:400;color:#e65100;">(overflow/temp stock only)</span></div><div class="result-location">' + escapeHtml(d.loc || "") + '</div><div style="font-size:12px;color:#7f8c8d;margin-top:4px;">' + (d.qty ? "Qty: " + escapeHtml(d.qty) + " &nbsp;|&nbsp; " : "") + escapeHtml(d.by || "") + " &nbsp;|&nbsp; " + dateStr + "</div></div>";
                     }
                 });
             }
-
             if (matches.length > 100) {
-                html += '<div class="no-results" style="color:#667eea;">Showing first 100 of ' +
-                    matches.length + " results. Refine your search for more specific results.</div>";
+                html += '<div class="no-results" style="color:#667eea;">Showing first 100 of ' + matches.length + " results. Refine your search for more specific results.</div>";
             }
-
             resultsDiv.innerHTML = html;
         }
         function performSearch() {
