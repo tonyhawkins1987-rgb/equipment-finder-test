@@ -3935,6 +3935,27 @@ if (action === 'delete') {
                             error
                         );
                     });
+                if (newStatus === "approved") {
+                    db.collection("locationSuggestions").doc(docId).get().then(function(snap) {
+                        var sd = snap.data();
+                        return db.collection("locationOverrides").add({
+                            itemName: sd.itemText || "",
+                            newLocation: sd.correctLocation || "",
+                            correctedName: sd.correctedName || "",
+                            deleted: false,
+                            approvedBy: auth.currentUser.email || null,
+                            approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }).then(function() {
+                        var ovItemName = itemText || "";
+                        var ovNewLocation = correctLocation || "";
+                        if (ovItemName) {
+                            var key = ovItemName.toLowerCase();
+                            window._locationOverrides[key] = Object.assign(window._locationOverrides[key] || {}, { itemName: ovItemName, newLocation: ovNewLocation, deleted: false });
+                            for (var i = 0; i < data.length; i++) { if ((data[i][0] || "").toLowerCase() === key) { if (ovNewLocation) data[i][1] = ovNewLocation; break; } }
+                        }
+                    }).catch(function(err) { console.error("locationOverrides write error:", err); });
+                }
             }
         });
 
