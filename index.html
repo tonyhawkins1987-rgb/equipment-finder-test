@@ -3203,9 +3203,12 @@
             appId: "1:432714172596:web:9c311e4bc43301382a6fe1"
         };
 
-            firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+                var auth = null, db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+    } catch(fbErr) { console.error('Firebase init failed:', fbErr); }
 
         // --------------------------------------------
         // Suggestion modal logic
