@@ -158,7 +158,7 @@
         }
 
         .result-item {
-            padding: 16px;
+                        padding: 16px 44px 16px 16px;
             border: 2px solid #e8e8e8;
             border-radius: 12px;
             margin-bottom: 12px;
@@ -191,31 +191,36 @@
             content: "📍 ";
         }
 
-        .no-results {
+                .no-results {
             text-align: center;
             padding: 40px;
-            
+        }
+
         .suggest-edit-btn {
             position: absolute;
-            right: 12px;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
-            border: 1px solid #c0c8f0;
-            border-radius: 6px;
-            color: #667eea;
+            border: none;
+            color: #bbb;
             cursor: pointer;
-            font-size: 13px;
-            padding: 3px 7px;
-            opacity: 0.6;
-            transition: opacity 0.2s, background 0.2s;
+            font-size: 14px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            opacity: 0;
+            transition: opacity 0.2s, color 0.2s, background 0.2s;
             line-height: 1;
+            pointer-events: none;
+        }
+        .result-item:hover .suggest-edit-btn {
+            opacity: 1;
+            pointer-events: auto;
         }
         .suggest-edit-btn:hover {
-            opacity: 1;
-            background: #eef0ff;
+            color: #667eea;
+            background: #f0f2ff;
         }
-            color: #7f8c8d;
             font-size: 16px;
         }
 
