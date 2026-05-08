@@ -757,6 +757,31 @@
             color: #7f8c8d;
             text-align: center;
             padding: 20px 0;
+                    .duplicate-section { margin-top: 28px; border-top: 2px solid #e0e0e0; padding-top: 18px; }
+        .duplicate-section h3 { font-size: 15px; color: #2c3e50; margin-bottom: 12px; font-weight: 700; }
+        .dup-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .dup-slider-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #7f8c8d; }
+        .dup-slider-wrap input[type=range] { width: 120px; accent-color: #667eea; }
+        .dup-slider-label { font-size: 12px; color: #667eea; font-weight: 600; min-width: 60px; }
+        .dup-scan-btn { padding: 7px 16px; border-radius: 18px; border: 1px solid #e0e0e0; background: #fff; cursor: pointer; font-size: 12px; transition: all 0.2s; color: #555; }
+        .dup-scan-btn:hover { border-color: #667eea; background: #f0f4ff; }
+        .dup-summary { font-size: 12px; color: #667eea; font-weight: 600; margin-bottom: 10px; min-height: 18px; }
+        .dup-band-label { font-size: 11px; font-weight: 700; color: #9e9e9e; text-transform: uppercase; letter-spacing: 0.06em; margin: 12px 0 6px 0; }
+        .dup-group { border: 1px solid #e0e0e0; border-radius: 12px; margin-bottom: 10px; overflow: hidden; background: #fafafa; }
+        .dup-item-row { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; background: #fff; }
+        .dup-item-row:last-child { border-bottom: none; }
+        .dup-item-row .result-name { font-weight: 600; color: #2c3e50; font-size: 13px; flex: 1; }
+        .dup-item-row .result-location { color: #667eea; font-size: 12px; min-width: 120px; }
+        .dup-row-actions { display: flex; gap: 5px; }
+        .dup-btn { padding: 3px 10px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; font-size: 11px; cursor: pointer; transition: all 0.2s; color: #555; }
+        .dup-btn:hover { border-color: #667eea; background: #f0f4ff; }
+        .dup-btn.btn-delete { color: #c62828; border-color: #f5c6cb; }
+        .dup-btn.btn-delete:hover { background: #fff0f0; border-color: #c62828; }
+        .dup-btn.btn-keep { color: #2e7d32; border-color: #a5d6a7; }
+        .dup-btn.btn-keep:hover { background: #f1f8e9; border-color: #2e7d32; }
+        .dup-skip-row { display: flex; justify-content: flex-end; padding: 6px 14px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+        .dup-results-list { max-height: 400px; overflow-y: auto; }
+        .dup-empty { text-align: center; color: #7f8c8d; font-size: 13px; padding: 20px 0; }
         }
 
         @media (max-width: 600px) {
@@ -958,6 +983,20 @@
                 <div class="sync-last-cleared" id="sync-last-cleared"></div>
             </div>
         </div>
+                    <div class="duplicate-section" id="duplicate-section">
+              <h3>Duplicate Finder</h3>
+              <div class="dup-controls">
+                <div class="dup-slider-wrap">
+                  <span>Low</span>
+                  <input type="range" id="dup-slider" min="1" max="3" value="2" step="1">
+                  <span>High</span>
+                  <span class="dup-slider-label" id="dup-slider-label">Medium</span>
+                </div>
+                <button type="button" class="dup-scan-btn" id="dup-scan-btn">Scan for Duplicates</button>
+              </div>
+              <div class="dup-summary" id="dup-summary"></div>
+              <div class="dup-results-list" id="dup-results-list"><div class="dup-empty">Press "Scan for Duplicates" to begin.</div></div>
+            </div>
     </div>
 
     <!-- Suggestion modal -->
@@ -3228,6 +3267,185 @@
 
     <!-- Firebase SDKs (v8.x, global namespace `firebase`) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    
+        // ---- DUPLICATE FINDER ----
+        (function() {
+          var slider = document.getElementById('dup-slider');
+          var sliderLabel = document.getElementById('dup-slider-label');
+          var scanBtn = document.getElementById('dup-scan-btn');
+          var summary = document.getElementById('dup-summary');
+          var resultsList = document.getElementById('dup-results-list');
+          var skippedGroups = [];
+          var sliderLabels = { '1': 'Low', '2': 'Medium', '3': 'High' };
+          if (slider) {
+            slider.addEventListener('input', function() {
+              sliderLabel.textContent = sliderLabels[slider.value];
+            });
+          }
+          function normaliseName(name) {
+            return name.toLowerCase()
+              .replace(/[^a-z0-9\s]/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .split(' ')
+              .sort()
+              .join(' ');
+          }
+          function levenshtein(a, b) {
+            var m = a.length, n = b.length;
+            var dp = [];
+            for (var i = 0; i <= m; i++) {
+              dp[i] = [i];
+              for (var j = 1; j <= n; j++) {
+                dp[i][j] = i === 0 ? j :
+                  a[i-1] === b[j-1] ? dp[i-1][j-1] :
+                  1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+              }
+            }
+            return dp[m][n];
+          }
+          function getConfidence(dist) {
+            if (dist === 0) return 3;
+            if (dist <= 2) return 3;
+            if (dist <= 4) return 2;
+            return 1;
+          }
+          function confidenceLabel(c) {
+            return c === 3 ? 'High Confidence' : c === 2 ? 'Possible Match' : 'Low Confidence';
+          }
+          function runScan() {
+            var threshold = parseInt(slider.value);
+            var items = (window.data || data).map(function(d) {
+              return { name: d[0], loc: d[1], norm: normaliseName(d[0]) };
+            });
+            var groups = [];
+            var used = new Array(items.length).fill(false);
+            for (var i = 0; i < items.length; i++) {
+              if (used[i]) continue;
+              var group = [i];
+              for (var j = i + 1; j < items.length; j++) {
+                if (used[j]) continue;
+                var dist = levenshtein(items[i].norm, items[j].norm);
+                var conf = getConfidence(dist);
+                if (conf >= threshold) {
+                  group.push(j);
+                  used[j] = true;
+                }
+              }
+              if (group.length > 1) {
+                used[i] = true;
+                var maxConf = group.reduce(function(max, idx) {
+                  if (idx === i) return max;
+                  var d = levenshtein(items[i].norm, items[idx].norm);
+                  return Math.max(max, getConfidence(d));
+                }, 3);
+                var groupKey = group.map(function(idx) { return items[idx].name; }).sort().join('|');
+                if (skippedGroups.indexOf(groupKey) === -1) {
+                  groups.push({ indices: group, items: group.map(function(idx) { return items[idx]; }), conf: maxConf, key: groupKey });
+                }
+              }
+            }
+            groups.sort(function(a, b) { return b.conf - a.conf; });
+            renderGroups(groups);
+          }
+          function renderGroups(groups) {
+            if (groups.length === 0) {
+              summary.textContent = 'No duplicates found at this sensitivity level.';
+              resultsList.innerHTML = '<div class="dup-empty">No duplicates found. Try increasing sensitivity.</div>';
+              return;
+            }
+            var exact = groups.filter(function(g) { return g.conf === 3; }).length;
+            var fuzzy = groups.length - exact;
+            summary.textContent = '\u26A0 ' + groups.length + ' group' + (groups.length !== 1 ? 's' : '') + ' found (' + exact + ' high confidence, ' + fuzzy + ' possible match' + (fuzzy !== 1 ? 'es' : '') + ')';
+            var bands = [3, 2, 1];
+            var html = '';
+            bands.forEach(function(band) {
+              var bandGroups = groups.filter(function(g) { return g.conf === band; });
+              if (bandGroups.length === 0) return;
+              html += '<div class="dup-band-label">' + confidenceLabel(band) + '</div>';
+              bandGroups.forEach(function(group) {
+                html += '<div class="dup-group" data-group-key="' + escapeAttr(group.key) + '">';
+                group.items.forEach(function(item) {
+                  html += '<div class="dup-item-row">' +
+                    '<span class="result-name">' + escapeHtml(item.name) + '</span>' +
+                    '<span class="result-location">' + escapeHtml(item.loc) + '</span>' +
+                    '<div class="dup-row-actions">' +
+                    '<button type="button" class="dup-btn btn-keep" data-action="keep" data-item="' + escapeAttr(item.name) + '" data-group-key="' + escapeAttr(group.key) + '">Keep</button>' +
+                    '<button type="button" class="dup-btn btn-delete" data-action="delete" data-item="' + escapeAttr(item.name) + '" data-group-key="' + escapeAttr(group.key) + '">Delete</button>' +
+                    '</div></div>';
+                });
+                html += '<div class="dup-skip-row"><button type="button" class="dup-btn" data-action="skip" data-group-key="' + escapeAttr(group.key) + '">Not a duplicate - Skip</button></div>';
+                html += '</div>';
+              });
+            });
+            resultsList.innerHTML = html;
+          }
+          function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          }
+          function escapeAttr(str) {
+            return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          }
+          function deleteItem(itemName, groupKey) {
+            var confirmed = confirm('Delete "' + itemName + '" from the database? This uses the override system and can be reviewed in Weekly Sync.');
+            if (!confirmed) return;
+            if (typeof writeDeleteOverride === 'function') {
+              writeDeleteOverride(itemName);
+            } else if (typeof db !== 'undefined') {
+              db.collection('locationOverrides').doc(itemName).set({ itemName: itemName, deleted: true, approvedBy: 'admin', approvedAt: new Date().toISOString() });
+              if (window._locationOverrides) window._locationOverrides[itemName.toLowerCase()] = { deleted: true };
+              var idx = (window.data || data).findIndex(function(d) { return d[0] === itemName; });
+              if (idx !== -1) (window.data || data).splice(idx, 1);
+            }
+            removeGroupFromDOM(groupKey, itemName);
+          }
+          function keepItem(itemName, groupKey) {
+            var groupEl = document.querySelector('.dup-group[data-group-key="' + escapeAttr(groupKey) + '"]');
+            if (!groupEl) return;
+            var rows = groupEl.querySelectorAll('.dup-item-row');
+            rows.forEach(function(row) {
+              var nameEl = row.querySelector('.result-name');
+              if (nameEl && nameEl.textContent !== itemName) {
+                var delBtn = row.querySelector('[data-action="delete"]');
+                if (delBtn) delBtn.click();
+              }
+            });
+          }
+          function removeGroupFromDOM(groupKey, deletedItem) {
+            var groupEl = document.querySelector('.dup-group[data-group-key="' + escapeAttr(groupKey) + '"]');
+            if (!groupEl) return;
+            if (deletedItem) {
+              var rows = groupEl.querySelectorAll('.dup-item-row');
+              var found = false;
+              rows.forEach(function(row) {
+                if (!found) {
+                  var nameEl = row.querySelector('.result-name');
+                  if (nameEl && nameEl.textContent === deletedItem) { row.remove(); found = true; }
+                }
+              });
+              if (groupEl.querySelectorAll('.dup-item-row').length < 2) groupEl.remove();
+            } else {
+              groupEl.remove();
+            }
+          }
+          if (resultsList) {
+            resultsList.addEventListener('click', function(e) {
+              var btn = e.target.closest('[data-action]');
+              if (!btn) return;
+              var action = btn.getAttribute('data-action');
+              var groupKey = btn.getAttribute('data-group-key');
+              var itemName = btn.getAttribute('data-item');
+              if (action === 'delete') deleteItem(itemName, groupKey);
+              else if (action === 'keep') keepItem(itemName, groupKey);
+              else if (action === 'skip') {
+                skippedGroups.push(groupKey);
+                removeGroupFromDOM(groupKey, null);
+              }
+            });
+          }
+          if (scanBtn) scanBtn.addEventListener('click', runScan);
+        })();
+        // ---- END DUPLICATE FINDER ----
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
