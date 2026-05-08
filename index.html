@@ -2958,9 +2958,9 @@
             { name: "Drains", keywords: ["drain"] },
             { name: "Catheters", keywords: ["catheter"] },
             { name: "Trays", keywords: ["tray"] },
-            { name: "Dressings", keywords: ["dressing", "bandage"] },
-            { name: "Hip/Knee", keywords: ["hip", "knee"] },
-            { name: "Scopes", keywords: ["scope", "arthroscopy"] }
+            { name: "Dressings", keywords: ["dressing","bandage"] },
+            { name: "Hip/Knee", keywords: ["hip","knee"] },
+            { name: "Scopes", keywords: ["scope","arthroscopy"] }
         ];
 
         // Generate filter buttons based on categories
@@ -3903,7 +3903,7 @@ if (btnDl) btnDl.addEventListener("click", function() {
             }
             suggestionsUnsubscribe = db
                 .collection("locationSuggestions")
-                .orderBy("createdAt", "desc")
+                .orderBy("createdAt","desc")
                 .limit(200)
                 .onSnapshot(
                     function (snapshot) {
@@ -4065,7 +4065,7 @@ if (btnDl) btnDl.addEventListener("click", function() {
                 const snippet =
                     '["' +
                     itemText.replace(/"/g, '\\"') +
-                    '", "' +
+                    '","' +
                     correctLocation.replace(/"/g, '\\"') +
                     '"],';
                 if (navigator.clipboard) {
@@ -4379,7 +4379,7 @@ if (action === 'delete') {
             // results always have live overflow data available
             function startGlobalListener() {
                 db.collection("overflowStock")
-                    .orderBy("updatedAt", "desc")
+                    .orderBy("updatedAt","desc")
                     .onSnapshot(function (snapshot) {
                         var docs = [];
                         snapshot.forEach(function (doc) { docs.push(doc); });
